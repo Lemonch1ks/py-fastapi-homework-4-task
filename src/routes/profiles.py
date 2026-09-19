@@ -18,7 +18,6 @@ from security.http import get_token
 from security.interfaces import JWTAuthManagerInterface
 from storages import S3StorageInterface
 
-
 router = APIRouter()
 
 
@@ -30,16 +29,10 @@ router = APIRouter()
 async def create_user_profile(
     user_id: int,
     token: str = Depends(get_token),
-    profile_data: ProfileCreateSchema = Depends(
-        ProfileCreateSchema.as_form
-    ),
+    profile_data: ProfileCreateSchema = Depends(ProfileCreateSchema.as_form),
     db: AsyncSession = Depends(get_db),
-    jwt_manager: JWTAuthManagerInterface = Depends(
-        get_jwt_auth_manager
-    ),
-    s3_client: S3StorageInterface = Depends(
-        get_s3_storage_client
-    ),
+    jwt_manager: JWTAuthManagerInterface = Depends(get_jwt_auth_manager),
+    s3_client: S3StorageInterface = Depends(get_s3_storage_client),
 ) -> ProfileResponseSchema:
     try:
         token_data = jwt_manager.decode_access_token(token)
@@ -65,9 +58,7 @@ async def create_user_profile(
             detail="User not found or not active.",
         )
 
-    is_admin = (
-        authenticated_user.group.name == UserGroupEnum.ADMIN
-    )
+    is_admin = authenticated_user.group.name == UserGroupEnum.ADMIN
 
     if authenticated_user_id != user_id and not is_admin:
         raise HTTPException(
@@ -85,9 +76,7 @@ async def create_user_profile(
             detail="User not found or not active.",
         )
 
-    stmt = select(UserProfileModel).where(
-        UserProfileModel.user_id == user_id
-    )
+    stmt = select(UserProfileModel).where(UserProfileModel.user_id == user_id)
     result = await db.execute(stmt)
     existing_profile = result.scalars().first()
 
